@@ -1,5 +1,7 @@
 import std.stdio;
+import std.array:join;
 import std.process;
+import core.thread;
 
 void main(string[] _args)
 {
@@ -8,12 +10,29 @@ void main(string[] _args)
 
 	while(true)
 	{
-		writefln("--- Starting: %s", _args[1..$]);
+		writefln("--- Starting: '%s'", _args[1..$].join(" "));
+		scope(exit) writefln("--- Process Ended");
 
-		auto pipes = pipeProcess(_args[1..$], Redirect.stdout);
+		auto pipes = pipeProcess(_args[1..$], Redirect.stdout | Redirect.stderr);
 		scope(exit) wait(pipes.pid);
 
-		foreach (line; pipes.stdout.byLine)
-			writefln("%s",line);
+		auto outThread = new Thread(()
+		{
+			foreach (line; pipes.stdout.byLine)
+			{
+				writefln("%s",line);
+			}
+		});
+
+		auto errThread = new Thread(()
+		{
+			foreach (line; pipes.stderr.byLine)
+			{
+				writefln("ERR: %s",line);
+			}
+		});
+
+		outThread.start();
+		errThread.start();
 	}
 }
