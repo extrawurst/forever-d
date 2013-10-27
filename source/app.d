@@ -17,7 +17,7 @@ void main(string[] _args)
 		writefln("--- Starting: '%s'", cmdline);
 		scope(exit) writefln("--- Process Ended");
 
-		auto pipes = pipeProcess(_args[1..$], Redirect.stdout | Redirect.stderr);
+		auto pipes = pipeShell(cmdline, Redirect.stdout | Redirect.stderr);
 		scope(exit) wait(pipes.pid);
 
 		auto outThread = new Thread(()
