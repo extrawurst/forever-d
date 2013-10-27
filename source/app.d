@@ -5,12 +5,16 @@ import core.thread;
 
 void main(string[] _args)
 {
+	writeln("--- Starting forever-d");
+
 	if(_args.length < 2)
 		return;
 
+	auto cmdline = _args[1..$].join(" ");
+
 	while(true)
 	{
-		writefln("--- Starting: '%s'", _args[1..$].join(" "));
+		writefln("--- Starting: '%s'", cmdline);
 		scope(exit) writefln("--- Process Ended");
 
 		auto pipes = pipeProcess(_args[1..$], Redirect.stdout | Redirect.stderr);
