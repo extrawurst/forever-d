@@ -1,6 +1,6 @@
 {
 	"name": "forever-d",
-	"version": "0.0.3",
+	"version": "0.0.4",
 	"description": "Ensures that a given program runs continuously",
 	"homepage": "https://github.com/Extrawurst/forever-d",
 	"copyright": "Copyright © 2013, Stephan Dilly",
