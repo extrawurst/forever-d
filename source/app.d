@@ -44,10 +44,13 @@ void main(string[] _args)
 	while(options.max == -1 || (options.max-- > 0))
 	{
 		writefln("--- Starting: '%s'", cmdline);
-		scope(exit) writefln("--- Process Ended");
 
 		auto pipes = pipeShell(cmdline, Redirect.stdout | Redirect.stderr);
-		scope(exit) wait(pipes.pid);
+		scope(exit) 
+		{
+			auto exitCode = wait(pipes.pid);
+			writefln("\n--- Process Ended. Exitcode: %s", exitCode);
+		}
 
 		auto outThread = new Thread(()
 		{
