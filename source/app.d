@@ -22,9 +22,24 @@ struct CmdOptions
 	@property bool useStdErrFile() const { return stderrFile.length > 0; }
 }
 
+void log(T...)(string _format, T params)
+{
+	if(_format.length == 0)
+	{
+		writeln("");
+	}
+	else
+	{
+		import std.string;
+		import std.datetime;
+
+		writefln("-- %s -- " ~ _format, Clock.currTime, params);
+	}
+}
+
 void main(string[] _args)
 {
-	writeln("--- Starting forever-d");
+	log("Starting forever-d");
 
 	if(_args.length < 2)
 		return;
@@ -33,23 +48,24 @@ void main(string[] _args)
 	options.Parse(_args);
 
 	if(options.useStdOutFile)
-		writefln("--- stdout file: %s", options.stdoutFile);
+		log("stdout file: %s", options.stdoutFile);
 	if(options.useStdErrFile)
-		writefln("--- stderr file: %s", options.stderrFile);
+		log("stderr file: %s", options.stderrFile);
 	if(options.max > 0)
-		writefln("--- max runs: %s", options.max);
+		log("max runs: %s", options.max);
 
 	auto cmdline = _args[1..$].join(" ");
 
 	while(options.max == -1 || (options.max-- > 0))
 	{
-		writefln("--- Starting: '%s'", cmdline);
+		log("Starting: '%s'", cmdline);
 
 		auto pipes = pipeShell(cmdline, Redirect.stdout | Redirect.stderr);
 		scope(exit) 
 		{
 			auto exitCode = wait(pipes.pid);
-			writefln("\n--- Process Ended. Exitcode: %s", exitCode);
+			log("");
+			log("Process Ended. Exitcode: %s", exitCode);
 		}
 
 		auto outThread = new Thread(()
