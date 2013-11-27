@@ -2,20 +2,35 @@ import std.stdio;
 import std.array:join;
 import std.process;
 import std.getopt;
+import std.conv:to;
 import core.thread;
 
 struct CmdOptions
 {
 	string stdoutFile;
 	string stderrFile;
+	string scriptOnRestart;
 	int max=-1;
 
 	public void Parse(ref string[] _args)
 	{
 		getopt(_args, 
-			"log|l", &stdoutFile,
-			"err|e", &stderrFile,
-			"max|m", &max);
+			"log|l",	&stdoutFile,
+			"err|e",	&stderrFile,
+			"script",	&scriptOnRestart,
+			"max|m",	&max);
+	}
+
+	public void print()
+	{
+		if(useStdOutFile)
+			log("stdout file: %s", stdoutFile);
+		if(useStdErrFile)
+			log("stderr file: %s", stderrFile);
+		if(scriptOnRestart.length > 0)
+			log("restart script: %s", scriptOnRestart);
+		if(max > 0)
+			log("max runs: %s", max);
 	}
 
 	@property bool useStdOutFile() const { return stdoutFile.length > 0; }
@@ -47,14 +62,14 @@ void main(string[] _args)
 	CmdOptions options;
 	options.Parse(_args);
 
-	if(options.useStdOutFile)
-		log("stdout file: %s", options.stdoutFile);
-	if(options.useStdErrFile)
-		log("stderr file: %s", options.stderrFile);
-	if(options.max > 0)
-		log("max runs: %s", options.max);
+	options.print();
 
 	auto cmdline = _args[1..$].join(" ");
+
+	string[string] envVars;
+	int restartCount;
+
+	envVars["FD_CMDLINE"] = cmdline;
 
 	while(options.max == -1 || (options.max-- > 0))
 	{
@@ -66,6 +81,16 @@ void main(string[] _args)
 			auto exitCode = wait(pipes.pid);
 			log("");
 			log("Process Ended. Exitcode: %s", exitCode);
+
+			restartCount++;
+
+			if(options.scriptOnRestart.length > 0)
+			{
+				envVars["FD_EXITCODE"] = to!string(exitCode);
+				envVars["FD_RESTARTS"] = to!string(restartCount);
+
+				spawnShell(options.scriptOnRestart, envVars);
+			}
 		}
 
 		auto outThread = new Thread(()
