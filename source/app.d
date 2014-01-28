@@ -52,12 +52,29 @@ void log(T...)(string _format, T params)
 	}
 }
 
+enum helpMessage = 
+`forever-d [options] [program] <Arguments...>
+
+options:
+    -m -max     Max runs of [program]. default is 0 (unlimited)
+    -l -log     File to print [program] std-out to. By default it's printed to stdout of forever-d
+    -e -err     File to print [program] std-err to. By default it's printed to stdout of forever-d
+    -script     Script run on process restart. Use [script-env] ENV variables in there.
+
+script-env:
+    FD_EXITCODE     exit code of [program]
+    FD_RESTARTS     number of restarts
+    FD_CMDLINE      the actual cmd line used for [program]`;
+
 void main(string[] _args)
 {
 	log("Starting forever-d");
 
-	if(_args.length < 2)
+	if(_args.length < 2 || _args[1] == "--help")
+	{
+		writeln(helpMessage);
 		return;
+	}
 
 	CmdOptions options;
 	options.Parse(_args);
