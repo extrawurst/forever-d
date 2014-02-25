@@ -1,3 +1,4 @@
+[![Build Status](https://api.travis-ci.org/Extrawurst/sockjs-d.png)](https://travis-ci.org/Extrawurst/sockjs-d)
 forever-d
 =========
 
