@@ -1,9 +1,6 @@
+module app;
+
 import std.stdio;
-import std.array:join;
-import std.process;
-import std.getopt;
-import std.conv:to;
-import core.thread;
 
 struct CmdOptions
 {
@@ -14,6 +11,8 @@ struct CmdOptions
 
 	public void Parse(ref string[] _args)
 	{
+		import std.getopt:getopt;
+
 		getopt(_args, 
 			"log|l",	&stdoutFile,
 			"err|e",	&stderrFile,
@@ -68,6 +67,11 @@ script-env:
 
 void main(string[] _args)
 {
+	import std.process;
+	import core.thread:Thread;
+	import std.array:join;
+	import std.conv:to;
+
 	log("Starting forever-d");
 
 	if(_args.length < 2 || _args[1] == "--help")
