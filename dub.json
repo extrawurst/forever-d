@@ -2,7 +2,7 @@
 	"name": "forever-d",
 	"description": "Ensures that a given program runs continuously",
 	"homepage": "https://github.com/Extrawurst/forever-d",
-	"copyright": "Copyright © 2013, Stephan Dilly",
+	"copyright": "Copyright © 2014, Stephan Dilly",
 	"license": "MIT",
 	"authors": [
 		"Stephan Dilly"
