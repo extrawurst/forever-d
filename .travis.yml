@@ -1,5 +1,7 @@
 language: d
 
+sudo: false
+
 d:
   - dmd
   - dmd-2.067.0
