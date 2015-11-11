@@ -1,5 +1,4 @@
-[![Build Status](https://api.travis-ci.org/Extrawurst/forever-d.png)](https://travis-ci.org/Extrawurst/forever-d)
-forever-d
+forever-d [![Build Status](https://api.travis-ci.org/Extrawurst/forever-d.png)](https://travis-ci.org/Extrawurst/forever-d)
 =========
 
 Ensures that a given program runs continuously.
