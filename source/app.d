@@ -8,16 +8,18 @@ struct CmdOptions
 	string stderrFile;
 	string scriptOnRestart;
 	int max=-1;
+	int minUptime=1000;
 
 	public void Parse(ref string[] _args)
 	{
 		import std.getopt:getopt;
 
-		getopt(_args, 
-			"log|l",	&stdoutFile,
-			"err|e",	&stderrFile,
-			"script",	&scriptOnRestart,
-			"max|m",	&max);
+		getopt(_args,
+			"log|l",		&stdoutFile,
+			"err|e",		&stderrFile,
+			"script",		&scriptOnRestart,
+			"min-uptime",	&minUptime,
+			"max|m",		&max);
 	}
 
 	public void print()
@@ -51,7 +53,7 @@ void log(T...)(string _format, T params)
 	}
 }
 
-enum helpMessage = 
+enum helpMessage =
 `forever-d [options] [program] <Arguments...>
 
 options:
@@ -59,6 +61,7 @@ options:
     -l -log     File to print [program] std-out to. By default it's printed to stdout of forever-d
     -e -err     File to print [program] std-err to. By default it's printed to stdout of forever-d
     -script     Script run on process restart. Use [script-env] ENV variables in there.
+    -min-uptime Minimum time in milliseconds program needs to run so it will restart again. (Defaults to 1000)
 
 script-env:
     FD_EXITCODE     exit code of [program]
@@ -71,6 +74,7 @@ void main(string[] _args)
 	import core.thread:Thread;
 	import std.array:join;
 	import std.conv:to;
+	import std.datetime:StopWatch;
 
 	log("Starting forever-d");
 
@@ -89,17 +93,24 @@ void main(string[] _args)
 
 	string[string] envVars;
 	int restartCount;
+	StopWatch uptime;
+	bool canRestart = true;
 
 	envVars["FD_CMDLINE"] = cmdline;
 
-	while(options.max == -1 || (options.max-- > 0))
+	while((options.max == -1 || (options.max-- > 0)) && canRestart)
 	{
 		log("Starting: '%s'", cmdline);
+		uptime.start();
 
 		auto pipes = pipeShell(cmdline, Redirect.stdout | Redirect.stderr);
-		scope(exit) 
+		scope(exit)
 		{
 			auto exitCode = wait(pipes.pid);
+			uptime.stop();
+			if(uptime.peek().msecs < options.minUptime)
+				canRestart = false;
+			uptime.reset();
 			log("");
 			log("Process Ended. Exitcode: %s", exitCode);
 
