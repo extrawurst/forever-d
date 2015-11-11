@@ -12,6 +12,7 @@ $ forever-d [options] [program] <Arguments...>
 
 options:
 	-m -max		Max runs of [program]. default is 0 (unlimited)
+	-min-uptime 	Minimum time in milliseconds program needs to run so it will restart again. (Defaults to 1000)
 	-l -log		File to print [program] std-out to. By default it's printed to stdout of forever-d
 	-e -err		File to print [program] std-err to. By default it's printed to stdout of forever-d
 	-script		Script run on process restart. Use [script-env] ENV variables in there.
