@@ -98,66 +98,39 @@ void main(string[] _args)
 
 	envVars["FD_CMDLINE"] = cmdline;
 
+    File outStream = stdout;
+    File errStream = stderr;
+
+    if(options.useStdOutFile)
+        outStream = File(options.stdoutFile, "a+");
+
+    if(options.useStdErrFile)
+        errStream = File(options.stderrFile, "a+");
+
 	while((options.max == -1 || (options.max-- > 0)) && canRestart)
 	{
 		log("Starting: '%s'", cmdline);
 		uptime.start();
 
-		auto pipes = pipeShell(cmdline, Redirect.stdout | Redirect.stderr);
-		scope(exit)
+        auto pid = spawnProcess(cmdline, std.stdio.stdin, outStream, errStream,
+            null, Config.retainStdout);
+            
+        auto exitCode = wait(pid);
+		uptime.stop();
+		if(uptime.peek().msecs < options.minUptime)
+			canRestart = false;
+		uptime.reset();
+		log("");
+        log("Process Ended. Exitcode: %s", exitCode);
+
+		restartCount++;
+
+		if(options.scriptOnRestart.length > 0)
 		{
-			auto exitCode = wait(pipes.pid);
-			uptime.stop();
-			if(uptime.peek().msecs < options.minUptime)
-				canRestart = false;
-			uptime.reset();
-			log("");
-			log("Process Ended. Exitcode: %s", exitCode);
+            envVars["FD_EXITCODE"] = to!string(exitCode);
+			envVars["FD_RESTARTS"] = to!string(restartCount);
 
-			restartCount++;
-
-			if(options.scriptOnRestart.length > 0)
-			{
-				envVars["FD_EXITCODE"] = to!string(exitCode);
-				envVars["FD_RESTARTS"] = to!string(restartCount);
-
-				spawnShell(options.scriptOnRestart, envVars);
-			}
+			spawnShell(options.scriptOnRestart, envVars);
 		}
-
-		auto outThread = new Thread(()
-		{
-			File outStream = stdout;
-
-			if(options.useStdOutFile)
-				outStream = File(options.stdoutFile, "a");
-
-			foreach (line; pipes.stdout.byLine)
-			{
-				if(options.useStdOutFile)
-					outStream.writef("%s",line);
-				else
-					outStream.writefln("%s",line);
-			}
-		});
-
-		auto errThread = new Thread(()
-		{
-			File outStream = stderr;
-
-			if(options.useStdErrFile)
-				outStream = File(options.stderrFile, "a");
-
-			foreach (line; pipes.stderr.byLine)
-			{
-				if(options.useStdErrFile)
-					outStream.writef("%s",line);
-				else
-					outStream.writefln("ERR: %s",line);
-			}
-		});
-
-		outThread.start();
-		errThread.start();
 	}
 }
