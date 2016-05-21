@@ -2,6 +2,7 @@ module app;
 
 import std.stdio;
 
+///
 struct CmdOptions
 {
 	string stdoutFile;
@@ -10,7 +11,8 @@ struct CmdOptions
 	int max=-1;
 	int minUptime=1000;
 
-	public void Parse(ref string[] _args)
+    ///
+	public void parse(string[] _args)
 	{
 		import std.getopt:getopt;
 
@@ -22,6 +24,7 @@ struct CmdOptions
 			"max|m",		&max);
 	}
 
+    ///
 	public void print()
 	{
 		if(useStdOutFile)
@@ -38,17 +41,18 @@ struct CmdOptions
 	@property bool useStdErrFile() const { return stderrFile.length > 0; }
 }
 
+///
 void log(T...)(string _format, T params)
 {
+    import std.stdio:writeln,writefln;
+
 	if(_format.length == 0)
 	{
 		writeln("");
 	}
 	else
 	{
-		import std.string;
-		import std.datetime;
-
+		import std.datetime:Clock;
 		writefln("-- %s -- " ~ _format, Clock.currTime, params);
 	}
 }
@@ -68,9 +72,10 @@ script-env:
     FD_RESTARTS     number of restarts
     FD_CMDLINE      the actual cmd line used for [program]`;
 
+///
 void main(string[] _args)
 {
-	import std.process;
+	import std.process:spawnProcess,spawnShell,wait,Config;
 	import core.thread:Thread;
 	import std.array:join;
 	import std.conv:to;
@@ -85,7 +90,7 @@ void main(string[] _args)
 	}
 
 	CmdOptions options;
-	options.Parse(_args);
+	options.parse(_args);
 
 	options.print();
 
