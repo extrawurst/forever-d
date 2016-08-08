@@ -7,3 +7,5 @@ forever-d_d.exe_cv
 forever-d_d.pdb
 package.userprefs
 .dub
+dub.selections.json
+dub.userprefs
