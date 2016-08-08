@@ -5,11 +5,11 @@ import std.stdio;
 ///
 struct CmdOptions
 {
-	string stdoutFile;
-	string stderrFile;
-	string scriptOnRestart;
-	int max=-1;
-	int minUptime=1000;
+	private string stdoutFile;
+	private string stderrFile;
+	private string scriptOnRestart;
+	private int max=-1;
+	private int minUptime=1000;
 
     ///
 	public void parse(string[] _args)
@@ -37,12 +37,13 @@ struct CmdOptions
 			log("max runs: %s", max);
 	}
 
+	///
 	@property bool useStdOutFile() const { return stdoutFile.length > 0; }
+	///
 	@property bool useStdErrFile() const { return stderrFile.length > 0; }
 }
 
-///
-void log(T...)(string _format, T params)
+private void log(T...)(string _format, T params)
 {
     import std.stdio:writeln,writefln;
 
@@ -57,7 +58,7 @@ void log(T...)(string _format, T params)
 	}
 }
 
-enum helpMessage =
+private enum helpMessage =
 `forever-d [options] [program] <Arguments...>
 
 options:
