@@ -12,16 +12,16 @@ struct CmdOptions
 	private int minUptime = 1000;
 
 	///
-	public void parse(string[] _args)
+	public void parse(ref string[] _args)
 	{
 		import std.getopt : getopt;
 
 		getopt(_args,
-			"log|l",		&stdoutFile,
-			"err|e",		&stderrFile,
-			"script",		&scriptOnRestart,
+			"log|l",	&stdoutFile,
+			"err|e",	&stderrFile,
+			"script",	&scriptOnRestart,
 			"min-uptime",	&minUptime,
-			"max|m",		&max);
+			"max|m",	&max);
 	}
 
 	///
@@ -119,7 +119,7 @@ void main(string[] _args)
 		log("Starting: '%s'", cmdline);
 		uptime.start();
 
-		auto pid = spawnProcess(cmdline, std.stdio.stdin, outStream, errStream,
+		auto pid = spawnProcess(_args[1 .. $], std.stdio.stdin, outStream, errStream,
 				null, Config.retainStdout);
 
 		auto exitCode = wait(pid);
