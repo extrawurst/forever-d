@@ -8,23 +8,23 @@ struct CmdOptions
 	private string stdoutFile;
 	private string stderrFile;
 	private string scriptOnRestart;
-	private int max=-1;
-	private int minUptime=1000;
+	private int max = -1;
+	private int minUptime = 1000;
 
-    ///
-	public void parse(string[] _args)
+	///
+	public void parse(ref string[] _args)
 	{
-		import std.getopt:getopt;
+		import std.getopt : getopt;
 
 		getopt(_args,
-			"log|l",		&stdoutFile,
-			"err|e",		&stderrFile,
-			"script",		&scriptOnRestart,
+			"log|l",	&stdoutFile,
+			"err|e",	&stderrFile,
+			"script",	&scriptOnRestart,
 			"min-uptime",	&minUptime,
-			"max|m",		&max);
+			"max|m",	&max);
 	}
 
-    ///
+	///
 	public void print()
 	{
 		if(useStdOutFile)
@@ -45,7 +45,7 @@ struct CmdOptions
 
 private void log(T...)(string _format, T params)
 {
-    import std.stdio:writeln,writefln;
+	import std.stdio : writeln, writefln;
 
 	if(_format.length == 0)
 	{
@@ -53,7 +53,8 @@ private void log(T...)(string _format, T params)
 	}
 	else
 	{
-		import std.datetime:Clock;
+		import std.datetime : Clock;
+
 		writefln("-- %s -- " ~ _format, Clock.currTime, params);
 	}
 }
@@ -76,11 +77,11 @@ script-env:
 ///
 void main(string[] _args)
 {
-	import std.process:spawnProcess,spawnShell,wait,Config;
-	import core.thread:Thread;
-	import std.array:join;
-	import std.conv:to;
-	import std.datetime:StopWatch;
+	import std.process : spawnProcess, spawnShell, wait, Config;
+	import core.thread : Thread;
+	import std.array : join;
+	import std.conv : to;
+	import std.datetime : StopWatch;
 
 	log("Starting forever-d");
 
@@ -95,7 +96,7 @@ void main(string[] _args)
 
 	options.print();
 
-	auto cmdline = _args[1..$].join(" ");
+	auto cmdline = _args[1 .. $].join(" ");
 
 	string[string] envVars;
 	int restartCount;
@@ -104,36 +105,36 @@ void main(string[] _args)
 
 	envVars["FD_CMDLINE"] = cmdline;
 
-    File outStream = stdout;
-    File errStream = stderr;
+	File outStream = stdout;
+	File errStream = stderr;
 
-    if(options.useStdOutFile)
-        outStream = File(options.stdoutFile, "a+");
+	if(options.useStdOutFile)
+		outStream = File(options.stdoutFile, "a+");
 
-    if(options.useStdErrFile)
-        errStream = File(options.stderrFile, "a+");
+	if(options.useStdErrFile)
+		errStream = File(options.stderrFile, "a+");
 
 	while((options.max == -1 || (options.max-- > 0)) && canRestart)
 	{
 		log("Starting: '%s'", cmdline);
 		uptime.start();
 
-        auto pid = spawnProcess(cmdline, std.stdio.stdin, outStream, errStream,
-            null, Config.retainStdout);
-            
-        auto exitCode = wait(pid);
+		auto pid = spawnProcess(_args[1 .. $], std.stdio.stdin, outStream, errStream,
+				null, Config.retainStdout);
+
+		auto exitCode = wait(pid);
 		uptime.stop();
 		if(uptime.peek().msecs < options.minUptime)
 			canRestart = false;
 		uptime.reset();
 		log("");
-        log("Process Ended. Exitcode: %s", exitCode);
+		log("Process Ended. Exitcode: %s", exitCode);
 
 		restartCount++;
 
 		if(options.scriptOnRestart.length > 0)
 		{
-            envVars["FD_EXITCODE"] = to!string(exitCode);
+			envVars["FD_EXITCODE"] = to!string(exitCode);
 			envVars["FD_RESTARTS"] = to!string(restartCount);
 
 			spawnShell(options.scriptOnRestart, envVars);
