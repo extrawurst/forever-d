@@ -16,38 +16,40 @@ struct CmdOptions
 	{
 		import std.getopt : getopt;
 
-		getopt(_args,
-			"log|l",	&stdoutFile,
-			"err|e",	&stderrFile,
-			"script",	&scriptOnRestart,
-			"min-uptime",	&minUptime,
-			"max|m",	&max);
+		getopt(_args, "log|l", &stdoutFile, "err|e", &stderrFile, "script",
+				&scriptOnRestart, "min-uptime", &minUptime, "max|m", &max);
 	}
 
 	///
 	public void print()
 	{
-		if(useStdOutFile)
+		if (useStdOutFile)
 			log("stdout file: %s", stdoutFile);
-		if(useStdErrFile)
+		if (useStdErrFile)
 			log("stderr file: %s", stderrFile);
-		if(scriptOnRestart.length > 0)
+		if (scriptOnRestart.length > 0)
 			log("restart script: %s", scriptOnRestart);
-		if(max > 0)
+		if (max > 0)
 			log("max runs: %s", max);
 	}
 
 	///
-	@property bool useStdOutFile() const { return stdoutFile.length > 0; }
+	@property bool useStdOutFile() const
+	{
+		return stdoutFile.length > 0;
+	}
 	///
-	@property bool useStdErrFile() const { return stderrFile.length > 0; }
+	@property bool useStdErrFile() const
+	{
+		return stderrFile.length > 0;
+	}
 }
 
 private void log(T...)(string _format, T params)
 {
 	import std.stdio : writeln, writefln;
 
-	if(_format.length == 0)
+	if (_format.length == 0)
 	{
 		writeln("");
 	}
@@ -59,8 +61,7 @@ private void log(T...)(string _format, T params)
 	}
 }
 
-private enum helpMessage =
-`forever-d [options] [program] <Arguments...>
+private enum helpMessage = `forever-d [options] [program] <Arguments...>
 
 options:
     -m -max     Max runs of [program]. default is 0 (unlimited)
@@ -85,7 +86,7 @@ void main(string[] _args)
 
 	log("Starting forever-d");
 
-	if(_args.length < 2 || _args[1] == "--help")
+	if (_args.length < 2 || _args[1] == "--help")
 	{
 		writeln(helpMessage);
 		return;
@@ -108,23 +109,31 @@ void main(string[] _args)
 	File outStream = stdout;
 	File errStream = stderr;
 
-	if(options.useStdOutFile)
-		outStream = File(options.stdoutFile, "a+");
-
-	if(options.useStdErrFile)
-		errStream = File(options.stderrFile, "a+");
-
-	while((options.max == -1 || (options.max-- > 0)) && canRestart)
+	while ((options.max == -1 || (options.max-- > 0)) && canRestart)
 	{
+		if (options.useStdOutFile)
+		{
+			if (restartCount > 0)
+				outStream.detach();
+			outStream = File(options.stdoutFile, "a+");
+		}
+
+		if (options.useStdErrFile)
+		{
+			if (restartCount > 0)
+				errStream.detach();
+			errStream = File(options.stderrFile, "a+");
+		}
+
 		log("Starting: '%s'", cmdline);
 		uptime.start();
 
-		auto pid = spawnProcess(_args[1 .. $], std.stdio.stdin, outStream, errStream,
-				null, Config.retainStdout);
+		auto pid = spawnProcess(_args[1 .. $], std.stdio.stdin, outStream,
+				errStream, null, Config.retainStdout);
 
 		auto exitCode = wait(pid);
 		uptime.stop();
-		if(uptime.peek().msecs < options.minUptime)
+		if (uptime.peek().msecs < options.minUptime)
 			canRestart = false;
 		uptime.reset();
 		log("");
@@ -132,7 +141,7 @@ void main(string[] _args)
 
 		restartCount++;
 
-		if(options.scriptOnRestart.length > 0)
+		if (options.scriptOnRestart.length > 0)
 		{
 			envVars["FD_EXITCODE"] = to!string(exitCode);
 			envVars["FD_RESTARTS"] = to!string(restartCount);
