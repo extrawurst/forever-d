@@ -82,7 +82,7 @@ void main(string[] _args)
 	import core.thread : Thread;
 	import std.array : join;
 	import std.conv : to;
-	import std.datetime : StopWatch;
+	import std.datetime.StopWatch;
 
 	log("Starting forever-d");
 
@@ -133,7 +133,7 @@ void main(string[] _args)
 
 		auto exitCode = wait(pid);
 		uptime.stop();
-		if (uptime.peek().msecs < options.minUptime)
+		if (uptime.peek.total!"msecs" < options.minUptime)
 			canRestart = false;
 		uptime.reset();
 		log("");
